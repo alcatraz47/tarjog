@@ -1,0 +1,62 @@
+# tarjog config. Copy to config/tarjog.toml (gitignored) and edit, then: bin/tarjog apply --profile <name>
+# Never put tokens or passwords here — identities only.
+
+default_profile = "personal"
+
+# Tier -> exact model ID. Change a model version in one place here.
+# Each tier also pins what the matching alias (haiku/sonnet/opus) resolves to.
+[models]
+fast     = "claude-haiku-5-5"
+standard = "claude-sonnet-5-5"
+deep     = "claude-opus-5-5"
+
+# Purpose -> tier and effort. Purpose names match agent files in agents/.
+# "main" is the session default model. enabled = false removes that agent;
+# /review-ai then points you at the built-in /code-review or /security-review.
+[purposes]
+main                        = { tier = "standard" }
+Explore                     = { tier = "fast",     effort = "low" }
+system-design-reviewer      = { tier = "standard", effort = "medium" }
+security-reviewer           = { tier = "standard", effort = "medium" }
+business-alignment-reviewer = { tier = "standard", effort = "medium" }
+
+[review]
+# Where to find business intent inside a repo, in priority order. Legacy repos rarely
+# have one tidy file, so list fallbacks. onboard-repo writes a per-repo override
+# to <repo>/.claude/tarjog.toml with whatever it actually finds.
+business_context = ["docs/BUSINESS_CONTEXT.md", "BUSINESS_CONTEXT.md", "docs/PRD*.md", "README.md"]
+
+[testing]
+# When the tarjog skill sets up a project: run the detected test suite to verify it?
+# "ask" | "always" | "never". Lint and type-check (read-only) always run if installed.
+run_on_setup  = "ask"
+# During everyday work: "related" (narrowest tests for the change) | "all" | "off".
+after_changes = "related"
+
+[usage]
+# Token and cost tracking while tarjog is in use. Ask "show my usage" (or /tarjog-usage) in Claude Code.
+track      = true   # record each session's tokens per model/agent after every turn (background, local only)
+statusline = true   # terminal status line: model · context · session cost · 5h/7d plan limits
+
+# ---- Profiles: one per Claude account. Any [models]/[purposes]/[review]/[testing] key
+# ---- can be overridden under [profiles.<name>.models] etc., and per project in
+# ---- <project>/.claude/tarjog.toml (same sections; apply with `bin/tarjog project <path>`).
+
+[profiles.personal]
+claude_config_dir = "~/.claude"
+
+[profiles.personal.git]
+github_user = "your-personal-gh-user"   # `gh auth switch` to this account at session start
+name        = ""            # commit author for commits Claude makes; empty = leave git's own config alone
+email       = ""
+
+[profiles.work]
+claude_config_dir = "~/.claude"   # set "~/.claude-work" to keep work history/memory separate
+
+[profiles.work.git]
+github_user = "your-work-gh-user"
+name        = ""
+email       = ""
+
+[profiles.work.purposes]
+security-reviewer = { tier = "deep", effort = "high" }   # example override: Team plan has more headroom

@@ -1,0 +1,6 @@
+config/tarjog.toml
+config/.active-profile
+__pycache__/
+.idea/
+/usage/
+/usage-previous.md
